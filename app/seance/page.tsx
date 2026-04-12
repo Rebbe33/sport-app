@@ -324,7 +324,7 @@ export default function SeancePage() {
         {step === 'meta' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="animate-up">
             <div>
-              <label className="field-label">Date</label>
+              <label className="field-label">Quand as-tu prévu cette séances ?</label>
               <input type="date" className="input-field" value={date} onChange={e => setDate(e.target.value)} />
             </div>
             <div>
