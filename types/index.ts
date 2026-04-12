@@ -5,12 +5,12 @@ export type Ressenti = 1 | 2 | 3 | 4 | 5
 export interface SportSession {
   id: string
   type: DisciplineType
-  date: string // ISO date string
+  date: string
   duration_minutes: number
   ressenti: Ressenti
   notes?: string
+  status: 'planned' | 'done'  
   created_at: string
-  status: 'planned' | 'done'
 }
 
 export interface SportSessionExercise {
