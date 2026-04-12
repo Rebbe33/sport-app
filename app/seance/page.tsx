@@ -218,13 +218,14 @@ export default function SeancePage() {
     if (!type) return
     setSaving(true)
     try {
-      const session = await createSession({
-        type,
-        date,
-        duration_minutes: Number(duration),
-        ressenti,
-        notes: (detailData.notes as string) || undefined,
-      })
+    const session = await createSession({
+  type,
+  date,
+  duration_minutes: Number(duration),
+  ressenti,
+  notes: (detailData.notes as string) || undefined,
+  status: 'planned',  // ← ajouter cette ligne
+})
 
       if (type === 'yoga' && detailData.poses) {
         const poses = detailData.poses as { name: string; duration: number }[]
