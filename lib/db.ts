@@ -138,6 +138,14 @@ export async function getAllRuns(): Promise<(SportRun & { session: SportSession 
   return data || []
 }
 
+export async function markSessionDone(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('sport_sessions')
+    .update({ status: 'done' })
+    .eq('id', id)
+  if (error) throw error
+}
+
 // ── Stats helpers ─────────────────────────────────────────
 
 export async function getRecentStats() {
