@@ -10,6 +10,7 @@ export interface SportSession {
   ressenti: Ressenti
   notes?: string
   created_at: string
+  status: 'planned' | 'done'
 }
 
 export interface SportSessionExercise {
