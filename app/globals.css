@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+:root {
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+
+  --bg: #F5F2ED;
+  --surface: #FDFBF8;
+  --surface2: #EDE9E2;
+  --border: rgba(60, 50, 30, 0.12);
+  --border-strong: rgba(60, 50, 30, 0.22);
+
+  --text: #1A160E;
+  --text-2: #6B6055;
+  --text-3: #A89E93;
+
+  --yoga: #7B6FA0;
+  --yoga-light: #EDE9F7;
+  --yoga-dark: #4A4270;
+
+  --muscu: #C4623A;
+  --muscu-light: #FAF0EB;
+  --muscu-dark: #8A3E20;
+
+  --cardio: #3A8C6E;
+  --cardio-light: #E8F5F0;
+  --cardio-dark: #1E5C47;
+
+  --accent: #D4A843;
+  --accent-light: #FAF3E0;
+
+  --nav-h: 68px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+
+.page {
+  min-height: 100dvh;
+  padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px);
+  padding-top: 0;
+}
+
+.nav-bottom {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: calc(var(--nav-h) + var(--safe-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 10px;
+  padding-bottom: var(--safe-bottom);
+  z-index: 100;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  color: var(--text-3);
+  transition: color 0.15s;
+}
+.nav-btn.active { color: var(--text); }
+.nav-btn span { font-size: 10px; font-family: var(--font-display); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-display);
+}
+.pill-yoga { background: var(--yoga-light); color: var(--yoga-dark); }
+.pill-muscu { background: var(--muscu-light); color: var(--muscu-dark); }
+.pill-cardio { background: var(--cardio-light); color: var(--cardio-dark); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px 20px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 14px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+
+.btn-secondary {
+  width: 100%;
+  padding: 13px 20px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-secondary:active { background: var(--surface2); transform: scale(0.98); }
+
+.input-field {
+  width: 100%;
+  padding: 13px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  font-size: 16px;
+  color: var(--text);
+  transition: border-color 0.15s;
+  outline: none;
+}
+.input-field:focus { border-color: var(--text-2); }
+.input-field::placeholder { color: var(--text-3); }
+
+label.field-label {
+  font-size: 12px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 10px;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-up { animation: slideUp 0.3s ease forwards; }
