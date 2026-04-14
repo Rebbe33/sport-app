@@ -27,9 +27,17 @@ interface ParsedRow {
 function parseDate(raw: unknown): string | null {
   if (raw === null || raw === undefined || raw === '') return null
 
-  // Nombre série Excel (ex: 45761)
+  // Objet Date natif (retourné par xlsx avec cellDates: true)
+  if (raw instanceof Date) {
+    if (isNaN(raw.getTime())) return null
+    const y = raw.getFullYear()
+    const m = String(raw.getMonth() + 1).padStart(2, '0')
+    const d = String(raw.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  // Nombre série Excel (fallback)
   if (typeof raw === 'number') {
-    // Excel compte depuis le 1er janvier 1900 (avec un bug sur 1900 = bissextile)
     const date = new Date((raw - 25569) * 86400 * 1000)
     if (isNaN(date.getTime())) return null
     const y = date.getUTCFullYear()
@@ -51,13 +59,6 @@ function parseDate(raw: unknown): string | null {
 
   // ISO YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10)
-
-  // Texte Date Excel ("14/04/2025 00:00:00")
-  const withTime = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/)
-  if (withTime) {
-    const [, d, m, y] = withTime
-    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
-  }
 
   return null
 }
@@ -163,7 +164,7 @@ export default function ImportPage() {
     const reader = new FileReader()
     reader.onload = (e) => {
       const data = new Uint8Array(e.target?.result as ArrayBuffer)
-      const wb = XLSX.read(data, { type: 'array' })
+      const wb = XLSX.read(data, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' })
       const ws = wb.Sheets[wb.SheetNames[0]]
       const json = XLSX.utils.sheet_to_json(ws, { defval: '' }) as Record<string, unknown>[]
       setRows(parseRows(json))
