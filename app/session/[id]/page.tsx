@@ -286,10 +286,10 @@ const toggleVoice = () => {
 
   
   const handleSkip = () => {
-    if (timerRef.current) clearInterval(timerRef.current)
-    goNext()
-  }
+  goNext()
+}
 
+  
   const handleFinish = async () => {
     if (session) await markSessionDone(session.id)
     router.push('/')
