@@ -24,26 +24,41 @@ interface ParsedRow {
   error?: string
 }
 
-function parseDate(raw: string | number): string | null {
-  if (!raw) return null
-  // Excel serial number
+function parseDate(raw: unknown): string | null {
+  if (raw === null || raw === undefined || raw === '') return null
+
+  // Nombre série Excel (ex: 45761)
   if (typeof raw === 'number') {
-    const date = XLSX.SSF.parse_date_code(raw)
-    if (!date) return null
-    const m = String(date.m).padStart(2, '0')
-    const d = String(date.d).padStart(2, '0')
-    return `${date.y}-${m}-${d}`
+    // Excel compte depuis le 1er janvier 1900 (avec un bug sur 1900 = bissextile)
+    const date = new Date((raw - 25569) * 86400 * 1000)
+    if (isNaN(date.getTime())) return null
+    const y = date.getUTCFullYear()
+    const m = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const d = String(date.getUTCDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
   }
-  // DD/MM/YYYY
+
   const str = String(raw).trim()
-  const match = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/)
-  if (match) {
-    const [, d, m, y] = match
+  if (!str) return null
+
+  // DD/MM/YYYY ou DD-MM-YYYY ou DD.MM.YYYY
+  const dmy = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/)
+  if (dmy) {
+    const [, d, m, y] = dmy
     const year = y.length === 2 ? `20${y}` : y
     return `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
   }
-  // ISO
+
+  // ISO YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10)
+
+  // Texte Date Excel ("14/04/2025 00:00:00")
+  const withTime = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/)
+  if (withTime) {
+    const [, d, m, y] = withTime
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+  }
+
   return null
 }
 
