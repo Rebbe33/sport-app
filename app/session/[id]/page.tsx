@@ -209,12 +209,6 @@ useEffect(() => { voiceRef.current = voiceEnabled }, [voiceEnabled])
     load()
   }, [id])
 
-  // ── Elapsed global timer ──────────────────────────────────
-  useEffect(() => {
-    if (!started || finished || paused) return
-    elapsedRef.current = setInterval(() => setTotalElapsed(t => t + 1), 1000)
-    return () => { if (elapsedRef.current) clearInterval(elapsedRef.current) }
-  }, [started, finished, paused])
 
   // ── Step timer ────────────────────────────────────────────
   const goNext = useCallback(() => {
