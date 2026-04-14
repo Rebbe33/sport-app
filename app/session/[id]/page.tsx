@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ChevronRight, X, SkipForward, Pause, Play, CheckCircle } from 'lucide-react'
+import { ChevronRight, X, SkipForward, Pause, Play, CheckCircle, Volume2, VolumeX } from 'lucide-react'
 import { getSessions, getSessionPoses, getSessionExercises, getRun, markSessionDone } from '@/lib/db'
 import type { SportSession, SportYogaPose, SportRun } from '@/types'
 
@@ -36,6 +36,30 @@ function alertDone() {
   setTimeout(() => beep(659, 200), 220)
   setTimeout(() => beep(784, 400), 440)
   vibrate([100, 50, 100, 50, 200])
+}
+
+function speak(text: string, voiceEnabled: boolean) {
+  if (!voiceEnabled) return
+  try {
+    window.speechSynthesis.cancel()
+    const utt = new SpeechSynthesisUtterance(text)
+    utt.lang = 'fr-FR'
+    utt.rate = 0.95
+    utt.pitch = 1.05
+    utt.volume = 1
+    const voices = window.speechSynthesis.getVoices()
+    const fr = voices.find(v => v.lang.startsWith('fr'))
+    if (fr) utt.voice = fr
+    window.speechSynthesis.speak(utt)
+  } catch {}
+}
+
+function buildStepSpeech(step: Step): string {
+  if (step.isRest) return `Repos. ${step.duration ? `${step.duration} secondes.` : ''} Récupère.`
+  const parts: string[] = [step.label]
+  if (step.sublabel) parts.push(step.sublabel)
+  if (step.duration) parts.push(`${step.duration} secondes.`)
+  return parts.join('. ')
 }
 
 // ── Helpers ────────────────────────────────────────────────
@@ -139,15 +163,26 @@ export default function SessionPage() {
   const [session, setSession] = useState<SportSession | null>(null)
   const [steps, setSteps] = useState<Step[]>([])
   const [stepIdx, setStepIdx] = useState(0)
-  const [timeLeft, setTimeLeft] = useState<number | null>(null)
-  const [totalElapsed, setTotalElapsed] = useState(0)
-  const [paused, setPaused] = useState(false)
-  const [finished, setFinished] = useState(false)
-  const [started, setStarted] = useState(false)
+const [timeLeft, setTimeLeft] = useState<number | null>(null)
+const [totalElapsed, setTotalElapsed] = useState(0)
+const [paused, setPaused] = useState(false)
+const [finished, setFinished] = useState(false)
+const [started, setStarted] = useState(false)
+const [voiceEnabled, setVoiceEnabled] = useState(true)
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null)
+const stepsRef = useRef<Step[]>([])
+const stepIdxRef = useRef(0)
+const pausedRef = useRef(false)
+const finishedRef = useRef(false)
+const voiceRef = useRef(true)
+const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+const timeLeftRef = useRef<number | null>(null)
 
+  useEffect(() => { stepsRef.current = steps }, [steps])
+useEffect(() => { stepIdxRef.current = stepIdx }, [stepIdx])
+useEffect(() => { pausedRef.current = paused }, [paused])
+useEffect(() => { finishedRef.current = finished }, [finished])
+useEffect(() => { voiceRef.current = voiceEnabled }, [voiceEnabled])
   // ── Load session data ────────────────────────────────────
   useEffect(() => {
     async function load() {
@@ -183,51 +218,79 @@ export default function SessionPage() {
 
   // ── Step timer ────────────────────────────────────────────
   const goNext = useCallback(() => {
-    setStepIdx(prev => {
-      const next = prev + 1
-      if (next >= steps.length) {
-        setFinished(true)
-        alertDone()
-        if (timerRef.current) clearInterval(timerRef.current)
-        if (elapsedRef.current) clearInterval(elapsedRef.current)
-        return prev
-      }
-      alertTransition()
-      setTimeLeft(steps[next]?.duration ?? null)
-      return next
-    })
-  }, [steps])
+  const nextIdx = stepIdxRef.current + 1
+  const allSteps = stepsRef.current
 
-  useEffect(() => {
-    if (!started || paused || finished) return
-    if (timeLeft === null) return // étape manuelle
-
-    if (timeLeft <= 0) {
-      goNext()
-      return
-    }
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft(t => {
-        if (t === null) return null
-        if (t <= 1) { clearInterval(timerRef.current!); return 0 }
-        return t - 1
-      })
-    }, 1000)
-
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [started, paused, finished, stepIdx, goNext]) // eslint-disable-line
-
-  const handlePause = () => {
-    setPaused(p => {
-      if (!p) {
-        if (timerRef.current) clearInterval(timerRef.current)
-        if (elapsedRef.current) clearInterval(elapsedRef.current)
-      }
-      return !p
-    })
+  if (nextIdx >= allSteps.length) {
+    finishedRef.current = true
+    setFinished(true)
+    alertDone()
+    speak('Bravo ! Séance terminée !', voiceRef.current)
+    if (tickRef.current) clearInterval(tickRef.current)
+    return
   }
 
+  alertTransition()
+  const nextStep = allSteps[nextIdx]
+  speak(buildStepSpeech(nextStep), voiceRef.current)
+
+  stepIdxRef.current = nextIdx
+  setStepIdx(nextIdx)
+
+  const nextDuration = nextStep.duration ?? null
+  timeLeftRef.current = nextDuration
+  setTimeLeft(nextDuration)
+}, [])
+
+// Tick global — un seul interval pour tout
+useEffect(() => {
+  if (!started) return
+  if (tickRef.current) clearInterval(tickRef.current)
+
+  tickRef.current = setInterval(() => {
+    if (pausedRef.current || finishedRef.current) return
+
+    setTotalElapsed(t => t + 1)
+
+    if (timeLeftRef.current === null) return // étape manuelle
+
+    const next = timeLeftRef.current - 1
+    timeLeftRef.current = next
+    setTimeLeft(next)
+
+    if (next <= 0) {
+      timeLeftRef.current = 0
+      goNext()
+    }
+  }, 1000)
+
+  return () => { if (tickRef.current) clearInterval(tickRef.current) }
+}, [started, goNext])
+
+// Annonce vocale au démarrage
+useEffect(() => {
+  if (started && steps.length > 0) {
+    setTimeout(() => speak(buildStepSpeech(steps[0]), voiceRef.current), 500)
+  }
+}, [started]) // eslint-disable-line
+
+ const handlePause = () => {
+  const next = !pausedRef.current
+  pausedRef.current = next
+  setPaused(next)
+  if (!next && steps[stepIdxRef.current]) {
+    speak(buildStepSpeech(steps[stepIdxRef.current]), voiceRef.current)
+  }
+}
+
+const toggleVoice = () => {
+  const next = !voiceRef.current
+  voiceRef.current = next
+  setVoiceEnabled(next)
+  if (!next) try { window.speechSynthesis.cancel() } catch {}
+}
+
+  
   const handleSkip = () => {
     if (timerRef.current) clearInterval(timerRef.current)
     goNext()
@@ -278,6 +341,18 @@ export default function SessionPage() {
           )}
         </div>
         <button
+  onClick={toggleVoice}
+  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
+    background: voiceEnabled ? color + '18' : 'var(--surface2)',
+    border: `1px solid ${voiceEnabled ? color + '44' : 'var(--border)'}`,
+    borderRadius: 12, marginBottom: 20,
+    color: voiceEnabled ? color : 'var(--text-3)',
+    fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 14 }}
+>
+  {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+  Guidage vocal {voiceEnabled ? 'activé' : 'désactivé'}
+</button>
+        <button
           className="btn-primary"
           style={{ background: color, maxWidth: 340, width: '100%' }}
           onClick={() => setStarted(true)}
@@ -323,9 +398,14 @@ export default function SessionPage() {
           </p>
           <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{formatTime(totalElapsed)} écoulé</p>
         </div>
-        <button onClick={handleSkip} style={{ color: 'var(--text-3)', padding: 4 }}>
-          <SkipForward size={22} />
-        </button>
+        <div style={{ display: 'flex', gap: 4 }}>
+  <button onClick={toggleVoice} style={{ color: voiceEnabled ? color : 'var(--text-3)', padding: 4 }}>
+    {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+  </button>
+  <button onClick={handleSkip} style={{ color: 'var(--text-3)', padding: 4 }}>
+    <SkipForward size={22} />
+  </button>
+</div>
       </div>
 
       {/* Progress bar */}
