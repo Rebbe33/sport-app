@@ -64,6 +64,7 @@ function parseDate(raw: unknown): string | null {
 }
 
 function parseRows(data: Record<string, unknown>[]): ParsedRow[] {
+  if (data.length > 0) console.log('Première ligne brute:', JSON.stringify(data[0]))
   return data.map((row, i) => {
     const raw = (col: string) => {
       const val = row[col] ?? row[col.toLowerCase()] ?? ''
