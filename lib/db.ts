@@ -39,6 +39,14 @@ export async function deleteSession(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function markSessionDone(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('sport_sessions')
+    .update({ status: 'done' })
+    .eq('id', id)
+  if (error) throw error
+}
+
 // ── Exercises (muscu/HIIT) ────────────────────────────────
 
 export async function getExercises(): Promise<SportExercise[]> {
@@ -136,14 +144,6 @@ export async function getAllRuns(): Promise<(SportRun & { session: SportSession 
     .order('created_at', { ascending: false })
   if (error) throw error
   return data || []
-}
-
-export async function markSessionDone(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('sport_sessions')
-    .update({ status: 'done' })
-    .eq('id', id)
-  if (error) throw error
 }
 
 // ── Stats helpers ─────────────────────────────────────────
