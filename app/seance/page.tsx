@@ -1,9 +1,10 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Leaf, Flame, Wind, ChevronLeft, Plus, Trash2, Check } from 'lucide-react'
+import { Leaf, Flame, Wind, ChevronLeft, Plus, Trash2, Check, FileSpreadsheet } from 'lucide-react'
 import { createSession, createRun, addYogaPose, addSessionExercise, createExercise, getExercises } from '@/lib/db'
 import type { DisciplineType, Ressenti } from '@/types'
 
@@ -218,14 +219,14 @@ export default function SeancePage() {
     if (!type) return
     setSaving(true)
     try {
-    const session = await createSession({
-  type,
-  date,
-  duration_minutes: Number(duration),
-  ressenti,
-  notes: (detailData.notes as string) || undefined,
-  status: 'planned',  // ← ajouter cette ligne
-})
+      const session = await createSession({
+        type,
+        date,
+        duration_minutes: Number(duration),
+        ressenti,
+        status: 'planned',
+        notes: (detailData.notes as string) || undefined,
+      })
 
       if (type === 'yoga' && detailData.poses) {
         const poses = detailData.poses as { name: string; duration: number }[]
@@ -318,6 +319,27 @@ export default function SeancePage() {
                 </div>
               </button>
             ))}
+
+            {/* Import depuis Excel */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, marginTop: 4 }}>
+              <p className="section-title">Ou importer en masse</p>
+              <Link href="/import">
+                <button style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  width: '100%', padding: '14px 16px',
+                  background: 'var(--surface)', border: '1px dashed var(--border-strong)',
+                  borderRadius: 14, textAlign: 'left',
+                }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileSpreadsheet size={20} color="var(--accent)" />
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14 }}>Importer depuis Excel</p>
+                    <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>Charge plusieurs séances d'un coup via .xlsx</p>
+                  </div>
+                </button>
+              </Link>
+            </div>
           </div>
         )}
 
@@ -325,7 +347,7 @@ export default function SeancePage() {
         {step === 'meta' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="animate-up">
             <div>
-              <label className="field-label">Quand as-tu prévu cette séances ?</label>
+              <label className="field-label">Date</label>
               <input type="date" className="input-field" value={date} onChange={e => setDate(e.target.value)} />
             </div>
             <div>
