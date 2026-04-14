@@ -71,16 +71,27 @@ function parseRows(data: Record<string, unknown>[]): ParsedRow[] {
       return String(val).trim()
     }
 
-    const dateStr = parseDate(row['Date'] as string | number ?? row['date'] as string | number)
-    const type = raw('Type').toLowerCase() as DisciplineType
-    const duration = parseInt(raw('Durée') || raw('Duree') || '0')
-    const ressenti = Math.min(5, Math.max(1, parseInt(raw('Ressenti') || '3'))) as Ressenti
-    const status = raw('Statut').toLowerCase() === 'done' ? 'done' : 'planned'
-    const notes = raw('Notes')
-    const poses = raw('Postures') || ''
-    const exercises = raw('Exercices') || ''
-    const muscleGroup = raw('Groupe musculaire') || raw('Groupe') || ''
-    const runData = raw('Distance + durée') || raw('Distance') || ''
+    const dateKey = Object.keys(row).find(k => k.toLowerCase().includes('date')) || 'Date'
+const typeKey = Object.keys(row).find(k => k.toLowerCase().includes('type')) || 'Type'
+const dureeKey = Object.keys(row).find(k => k.toLowerCase().includes('dur')) || 'Durée'
+const ressentiKey = Object.keys(row).find(k => k.toLowerCase().includes('ressenti')) || 'Ressenti'
+const statutKey = Object.keys(row).find(k => k.toLowerCase().includes('statut')) || 'Statut'
+const notesKey = Object.keys(row).find(k => k.toLowerCase().includes('notes')) || 'Notes'
+const posesKey = Object.keys(row).find(k => k.toLowerCase().includes('yoga') || k.toLowerCase().includes('posture')) || 'Postures'
+const exosKey = Object.keys(row).find(k => k.toLowerCase().includes('exercice') || k.toLowerCase().includes('muscu')) || 'Exercices'
+const muscleKey = Object.keys(row).find(k => k.toLowerCase().includes('groupe')) || 'Groupe musculaire'
+const runKey = Object.keys(row).find(k => k.toLowerCase().includes('cardio') || k.toLowerCase().includes('distance')) || 'Distance'
+
+const dateStr = parseDate(row[dateKey])
+    const type = String(row[typeKey] ?? '').trim().toLowerCase() as DisciplineType
+const duration = parseInt(String(row[dureeKey] ?? '0'))
+const ressenti = Math.min(5, Math.max(1, parseInt(String(row[ressentiKey] ?? '3')))) as Ressenti
+const status = String(row[statutKey] ?? '').toLowerCase() === 'done' ? 'done' : 'planned'
+const notes = String(row[notesKey] ?? '').trim()
+const poses = String(row[posesKey] ?? '').trim()
+const exercises = String(row[exosKey] ?? '').trim()
+const muscleGroup = String(row[muscleKey] ?? '').trim()
+const runData = String(row[runKey] ?? '').trim()
 
     let error: string | undefined
     if (!dateStr) error = 'Date invalide'
@@ -167,8 +178,15 @@ export default function ImportPage() {
       const data = new Uint8Array(e.target?.result as ArrayBuffer)
       const wb = XLSX.read(data, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' })
       const ws = wb.Sheets[wb.SheetNames[0]]
-      const json = XLSX.utils.sheet_to_json(ws, { defval: '' }) as Record<string, unknown>[]
-      setRows(parseRows(json))
+      const json = XLSX.utils.sheet_to_json(ws, { 
+  defval: '',
+  range: 2  // saute les 2 premières lignes (titre + sous-titre), utilise la ligne 3 comme en-têtes
+}) as Record<string, unknown>[]
+      const filtered = json.filter((row: Record<string, unknown>) => {
+  const date = row['Date\n(JJ/MM/AAAA)'] ?? row['Date'] ?? ''
+  return String(date).trim() !== '' && String(date).trim() !== 'Date\n(JJ/MM/AAAA)'
+})
+setRows(parseRows(filtered))
       setDone(false)
     }
     reader.readAsArrayBuffer(file)
