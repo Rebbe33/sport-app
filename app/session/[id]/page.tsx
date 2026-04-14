@@ -203,8 +203,10 @@ useEffect(() => { voiceRef.current = voiceEnabled }, [voiceEnabled])
       if (s.type === 'cardio') run = await getRun(id)
 
       const built = buildSteps(s.type, poses, exercises, run)
-      setSteps(built)
-      setTimeLeft(built[0]?.duration ?? null)
+setSteps(built)
+stepsRef.current = built
+timeLeftRef.current = built[0]?.duration ?? null
+setTimeLeft(built[0]?.duration ?? null)
     }
     load()
   }, [id])
