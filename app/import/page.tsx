@@ -78,6 +78,7 @@ const ressentiKey = Object.keys(row).find(k => k.toLowerCase().includes('ressent
 const statutKey = Object.keys(row).find(k => k.toLowerCase().includes('statut')) || 'Statut'
 const notesKey = Object.keys(row).find(k => k.toLowerCase().includes('notes')) || 'Notes'
 const posesKey = Object.keys(row).find(k => k.toLowerCase().includes('yoga') || k.toLowerCase().includes('posture')) || 'Postures'
+    console.log('Toutes les clés:', Object.keys(row))
 const exosKey = Object.keys(row).find(k => k.toLowerCase().includes('exercice') || k.toLowerCase().includes('muscu') || k.toLowerCase().includes('nom:')) || 'Exercices'
 const muscleKey = Object.keys(row).find(k => k.toLowerCase().includes('groupe')) || 'Groupe musculaire'
 const runKey = Object.keys(row).find(k => k.toLowerCase().includes('distance') || k.toLowerCase().includes('cardio') || k.toLowerCase().includes('durée course')) || 'Distance'
