@@ -73,15 +73,15 @@ function parseRows(data: Record<string, unknown>[]): ParsedRow[] {
 
     const dateKey = Object.keys(row).find(k => k.toLowerCase().includes('date')) || 'Date'
 const typeKey = Object.keys(row).find(k => k.toLowerCase().includes('type')) || 'Type'
-const dureeKey = Object.keys(row).find(k => k.toLowerCase().includes('dur')) || 'Durée'
+const dureeKey = Object.keys(row).find(k => k.toLowerCase().includes('dur') && !k.toLowerCase().includes('distance')) || 'Durée'
 const ressentiKey = Object.keys(row).find(k => k.toLowerCase().includes('ressenti')) || 'Ressenti'
 const statutKey = Object.keys(row).find(k => k.toLowerCase().includes('statut')) || 'Statut'
 const notesKey = Object.keys(row).find(k => k.toLowerCase().includes('notes')) || 'Notes'
 const posesKey = Object.keys(row).find(k => k.toLowerCase().includes('yoga') || k.toLowerCase().includes('posture')) || 'Postures'
-const exosKey = Object.keys(row).find(k => k.toLowerCase().includes('exercice') || k.toLowerCase().includes('muscu')) || 'Exercices'
+const exosKey = Object.keys(row).find(k => k.toLowerCase().includes('exercice') || k.toLowerCase().includes('muscu') || k.toLowerCase().includes('nom:')) || 'Exercices'
 const muscleKey = Object.keys(row).find(k => k.toLowerCase().includes('groupe')) || 'Groupe musculaire'
-const runKey = Object.keys(row).find(k => k.toLowerCase().includes('cardio') || k.toLowerCase().includes('distance')) || 'Distance'
-
+const runKey = Object.keys(row).find(k => k.toLowerCase().includes('distance') || k.toLowerCase().includes('cardio') || k.toLowerCase().includes('durée course')) || 'Distance'
+    
 const dateStr = parseDate(row[dateKey])
     const type = String(row[typeKey] ?? '').trim().toLowerCase() as DisciplineType
 const duration = parseInt(String(row[dureeKey] ?? '0'))
@@ -136,12 +136,14 @@ async function importRow(row: ParsedRow): Promise<void> {
   if (row.type === 'muscu' && row.exercises) {
     const items = row.exercises.split(';')
     for (let i = 0; i < items.length; i++) {
-      const parts = items[i].trim().split(':')
-      const name = parts[0]?.trim()
-      if (!name) continue
-      const sets = parseInt(parts[1] || '3')
-      const reps = parseInt(parts[2] || '10')
-      const weight = parseFloat(parts[3] || '0')
+      const raw = items[i].trim()
+if (!raw) continue
+const parts = raw.split(':')
+const name = parts[0]?.trim()
+if (!name) continue
+const sets = parts[1] ? parseInt(parts[1].trim()) : 3
+const reps = parts[2] ? parseInt(parts[2].trim()) : 10
+const weight = parts[3] ? parseFloat(parts[3].trim()) : 0
       const ex = await createExercise({ name, muscle_group: row.muscleGroup || '', is_hiit: false })
       await addSessionExercise({ session_id: session.id, exercise_id: ex.id, sets, reps, weight_kg: weight || undefined, order_index: i })
     }
