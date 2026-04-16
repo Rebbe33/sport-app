@@ -79,9 +79,9 @@ const statutKey = Object.keys(row).find(k => k.toLowerCase().includes('statut'))
 const notesKey = Object.keys(row).find(k => k.toLowerCase().includes('notes')) || 'Notes'
 const posesKey = Object.keys(row).find(k => k.toLowerCase().includes('yoga') || k.toLowerCase().includes('posture')) || 'Postures'
     console.log('Toutes les clés:', Object.keys(row))
-const exosKey = Object.keys(row).find(k => k.toLowerCase().includes('exercice') || k.toLowerCase().includes('muscu') || k.toLowerCase().includes('nom:')) || 'Exercices'
-const muscleKey = Object.keys(row).find(k => k.toLowerCase().includes('groupe')) || 'Groupe musculaire'
-const runKey = Object.keys(row).find(k => k.toLowerCase().includes('distance') || k.toLowerCase().includes('cardio') || k.toLowerCase().includes('durée course')) || 'Distance'
+const exosKey = Object.keys(row).find(k => k.includes('Exercices') || k.includes('exercices')) || ''
+const muscleKey = Object.keys(row).find(k => k.includes('Groupe') || k.includes('groupe')) || ''
+const runKey = Object.keys(row).find(k => k.includes('Dist') || k.includes('dist') || k.includes('CARDIO')) || ''
     
 const dateStr = parseDate(row[dateKey])
     const type = String(row[typeKey] ?? '').trim().toLowerCase() as DisciplineType
