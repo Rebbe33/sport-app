@@ -61,7 +61,7 @@ export async function getExercises(): Promise<SportExercise[]> {
 export async function createExercise(exercise: Omit<SportExercise, 'id'>): Promise<SportExercise> {
   const { data, error } = await supabase
     .from('sport_exercises')
-    .insert(exercise)
+    .upsert(exercise, { onConflict: 'name', ignoreDuplicates: false })
     .select()
     .single()
   if (error) throw error
