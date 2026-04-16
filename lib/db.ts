@@ -59,9 +59,19 @@ export async function getExercises(): Promise<SportExercise[]> {
 }
 
 export async function createExercise(exercise: Omit<SportExercise, 'id'>): Promise<SportExercise> {
+  // Cherche d'abord si l'exercice existe déjà
+  const { data: existing } = await supabase
+    .from('sport_exercises')
+    .select('*')
+    .ilike('name', exercise.name)
+    .maybeSingle()
+
+  if (existing) return existing
+
+  // Sinon on le crée
   const { data, error } = await supabase
     .from('sport_exercises')
-    .upsert(exercise, { onConflict: 'name', ignoreDuplicates: false })
+    .insert(exercise)
     .select()
     .single()
   if (error) throw error
