@@ -181,7 +181,9 @@ export default function ImportPage() {
       const data = new Uint8Array(e.target?.result as ArrayBuffer)
       const wb = XLSX.read(data, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' })
       const sheetName = wb.SheetNames.find(n => 
-  n.toLowerCase().includes('programme') || n.toLowerCase().includes('séance') || n.toLowerCase() === 'sheet1'
+  !n.toLowerCase().includes('guide') && 
+  !n.toLowerCase().includes('statisti') &&
+  !n.toLowerCase().includes('instruction')
 ) || wb.SheetNames[0]
 const ws = wb.Sheets[sheetName]
       console.log('Onglet utilisé:', sheetName, '— Tous les onglets:', wb.SheetNames)
