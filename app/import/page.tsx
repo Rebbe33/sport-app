@@ -71,17 +71,17 @@ function parseRows(data: Record<string, unknown>[]): ParsedRow[] {
       return String(val).trim()
     }
 
-    const dateKey = Object.keys(row).find(k => k.toLowerCase().includes('date')) || 'Date'
-const typeKey = Object.keys(row).find(k => k.toLowerCase().includes('type')) || 'Type'
-const dureeKey = Object.keys(row).find(k => k.toLowerCase().includes('dur') && !k.toLowerCase().includes('distance')) || 'Durée'
-const ressentiKey = Object.keys(row).find(k => k.toLowerCase().includes('ressenti')) || 'Ressenti'
-const statutKey = Object.keys(row).find(k => k.toLowerCase().includes('statut')) || 'Statut'
-const notesKey = Object.keys(row).find(k => k.toLowerCase().includes('notes')) || 'Notes'
-const posesKey = Object.keys(row).find(k => k.toLowerCase().includes('yoga') || k.toLowerCase().includes('posture')) || 'Postures'
-    console.log('Toutes les clés:', Object.keys(row))
-const exosKey = Object.keys(row).find(k => k.includes('Exercices') || k.includes('exercices')) || ''
-const muscleKey = Object.keys(row).find(k => k.includes('Groupe') || k.includes('groupe')) || ''
+   const dateKey = Object.keys(row).find(k => k.includes('Date') || k.includes('date')) || ''
+const typeKey = Object.keys(row).find(k => k.includes('Type') || k.includes('type')) || ''
+const dureeKey = Object.keys(row).find(k => (k.includes('ur') && !k.includes('Dist') && !k.includes('dist'))) || ''
+const ressentiKey = Object.keys(row).find(k => k.includes('essenti')) || ''
+const statutKey = Object.keys(row).find(k => k.includes('tatut')) || ''
+const notesKey = Object.keys(row).find(k => k.includes('otes') || k.includes('rotocole')) || ''
+const posesKey = Object.keys(row).find(k => k.includes('osture') || k.includes('YOGA')) || ''
+const exosKey = Object.keys(row).find(k => k.includes('xercice') || k.includes('MUSCU')) || ''
+const muscleKey = Object.keys(row).find(k => k.includes('roupe')) || ''
 const runKey = Object.keys(row).find(k => k.includes('Dist') || k.includes('dist') || k.includes('CARDIO')) || ''
+    if (i === 0) console.log('Keys détectées:', { posesKey, exosKey, runKey })
     
 const dateStr = parseDate(row[dateKey])
     const type = String(row[typeKey] ?? '').trim().toLowerCase() as DisciplineType
