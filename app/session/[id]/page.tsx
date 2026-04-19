@@ -81,7 +81,8 @@ function buildSteps(
   type: string,
   poses: SportYogaPose[],
   exercises: { name: string; sets: number; reps: number; weight_kg?: number }[],
-  run: SportRun | null
+  run: SportRun | null,
+  notes: string = ''
 ): Step[] {
   if (type === 'yoga') {
     const steps: Step[] = [{ label: 'Échauffement', sublabel: 'Respirations profondes', duration: 60 }]
@@ -117,19 +118,61 @@ function buildSteps(
   return steps
 }
 
-  if (type === 'cardio') {
-    const steps: Step[] = [
-      { label: 'Échauffement', sublabel: 'Marche rapide 5 min', duration: 300 },
-      {
-        label: 'Course',
-        sublabel: run ? `Objectif : ${run.distance_km} km` : 'Lance-toi !',
-        duration: run ? run.duration_seconds : undefined,
-      },
-      { label: 'Récupération', sublabel: 'Marche douce 3 min', duration: 180 },
-      { label: 'Étirements', sublabel: 'Mollets, quadriceps, hanches', duration: 180 },
-    ]
-    return steps
+if (type === 'cardio') {
+  const steps: Step[] = [
+    { label: 'Échauffement', sublabel: 'Marche rapide', duration: 300 },
+  ]
+
+  // notes vient du paramètre
+  const totalSeconds = run ? run.duration_seconds : 0
+
+  // Détection fractionné : "1:2" ou "1:90s" ou "0:30:1:30" etc.
+  // Format attendu dans les notes : "fractionné X:Y" ou "fractionné X:Ys"
+  const fractMatch = notes.match(/(\d+)(s?)\s*:\s*(\d+)(s?)/i)
+  const isContinue = notes.toLowerCase().includes('continu')
+
+  if (!isContinue && fractMatch) {
+    // Parse les durées — si pas de 's', c'est des minutes → convertir en secondes
+    const val1 = parseInt(fractMatch[1])
+    const unit1 = fractMatch[2].toLowerCase() === 's' ? 1 : 60
+    const val2 = parseInt(fractMatch[3])
+    const unit2 = fractMatch[4].toLowerCase() === 's' ? 1 : 60
+
+    const runSec = val1 * unit1   // durée course en secondes
+    const walkSec = val2 * unit2  // durée marche en secondes
+    const cycleTime = runSec + walkSec
+
+    // Calculer le nombre de cycles selon la durée totale
+    const cycles = totalSeconds > 0 ? Math.round(totalSeconds / cycleTime) : 10
+
+    for (let i = 1; i <= cycles; i++) {
+      steps.push({
+        label: '🏃 Course',
+        sublabel: `Cycle ${i}/${cycles} — cours !`,
+        duration: runSec,
+      })
+      if (i < cycles) {
+        steps.push({
+          label: '🚶 Marche',
+          sublabel: `Cycle ${i}/${cycles} — récupère`,
+          duration: walkSec,
+          isRest: true,
+        })
+      }
+    }
+  } else {
+    // Course continue
+    steps.push({
+      label: '🏃 Course',
+      sublabel: run ? `${run.distance_km > 0 ? run.distance_km + ' km' : ''} · ${Math.floor(totalSeconds / 60)} min` : 'Lance-toi !',
+      duration: totalSeconds || undefined,
+    })
   }
+
+  steps.push({ label: 'Récupération', sublabel: 'Marche douce', duration: 180 })
+  steps.push({ label: 'Étirements', sublabel: 'Mollets, quadriceps, hanches', duration: 180 })
+  return steps
+}
 
   return [{ label: 'Séance', sublabel: 'C\'est parti !', duration: undefined }]
 }
@@ -208,7 +251,7 @@ useEffect(() => { voiceRef.current = voiceEnabled }, [voiceEnabled])
       }
       if (s.type === 'cardio') run = await getRun(id)
 
-      const built = buildSteps(s.type, poses, exercises, run)
+      const built = buildSteps(s.type, poses, exercises, run, s.notes || '')
 setSteps(built)
 stepsRef.current = built
 timeLeftRef.current = built[0]?.duration ?? null
