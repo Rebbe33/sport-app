@@ -180,7 +180,10 @@ export default function ImportPage() {
     reader.onload = (e) => {
       const data = new Uint8Array(e.target?.result as ArrayBuffer)
       const wb = XLSX.read(data, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' })
-      const ws = wb.Sheets[wb.SheetNames[0]]
+      const sheetName = wb.SheetNames.find(n => 
+  n.toLowerCase().includes('programme') || n.toLowerCase().includes('séance') || n.toLowerCase() === 'sheet1'
+) || wb.SheetNames[0]
+const ws = wb.Sheets[sheetName]
       const json = XLSX.utils.sheet_to_json(ws, { 
   defval: '',
   range: 2  // saute les 2 premières lignes (titre + sous-titre), utilise la ligne 3 comme en-têtes
