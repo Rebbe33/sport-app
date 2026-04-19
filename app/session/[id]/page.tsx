@@ -94,22 +94,28 @@ function buildSteps(
   }
 
   if (type === 'muscu') {
-    const steps: Step[] = [{ label: 'Échauffement', sublabel: '5 min de mobilité articulaire', duration: 300 }]
+  const steps: Step[] = [{ label: 'Échauffement', sublabel: '5 min de mobilité articulaire', duration: 300 }]
+  
+  // Trouver le nombre max de séries parmi tous les exercices
+  const maxSets = Math.max(...exercises.map(ex => ex.sets), 1)
+  
+  for (let s = 1; s <= maxSets; s++) {
+    // Pour chaque série, on passe par tous les exercices
     for (const ex of exercises) {
-      for (let s = 1; s <= ex.sets; s++) {
-        steps.push({
-          label: ex.name,
-          sublabel: `Série ${s}/${ex.sets} · ${ex.reps} reps${ex.weight_kg ? ` · ${ex.weight_kg} kg` : ''}`,
-          duration: undefined, // manuel — appuyer pour valider
-        })
-        if (s < ex.sets) {
-          steps.push({ label: 'Repos', sublabel: 'Récupération entre séries', duration: 60, isRest: true })
-        }
-      }
-      steps.push({ label: 'Repos', sublabel: 'Récupération avant prochain exercice', duration: 90, isRest: true })
+      if (s > ex.sets) continue // cet exercice a moins de séries
+      steps.push({
+        label: ex.name,
+        sublabel: `Série ${s} sur ${ex.sets} · ${ex.reps} répétitions${ex.weight_kg ? ` · ${ex.weight_kg} kg` : ''}`,
+        duration: undefined,
+      })
     }
-    return steps
+    // Repos entre les tours (sauf après le dernier)
+    if (s < maxSets) {
+      steps.push({ label: 'Repos', sublabel: 'Récupération entre les tours', duration: 90, isRest: true })
+    }
   }
+  return steps
+}
 
   if (type === 'cardio') {
     const steps: Step[] = [
