@@ -151,13 +151,17 @@ const weight = parts[3] ? parseFloat(parts[3].trim()) : 0
   }
 
   if (row.type === 'cardio' && row.runData) {
-    const parts = row.runData.split('|')
-    const distanceKm = parseFloat(parts[0]?.trim() || '0')
-    const durationMin = parseFloat(parts[1]?.trim() || '0')
-    if (distanceKm > 0 && durationMin > 0) {
-      await createRun({ session_id: session.id, distance_km: distanceKm, duration_seconds: durationMin * 60 })
-    }
+  const parts = row.runData.split('|')
+  const distanceKm = parseFloat(parts[0]?.trim() || '0')
+  const durationMin = parseFloat(parts[1]?.trim() || '0')
+  if (durationMin > 0) {
+    await createRun({ 
+      session_id: session.id, 
+      distance_km: distanceKm || 0, 
+      duration_seconds: durationMin * 60 
+    })
   }
+}
 }
 
 const DISCIPLINE_COLORS: Record<DisciplineType, string> = {
