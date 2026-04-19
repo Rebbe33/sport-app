@@ -184,6 +184,7 @@ export default function ImportPage() {
   n.toLowerCase().includes('programme') || n.toLowerCase().includes('séance') || n.toLowerCase() === 'sheet1'
 ) || wb.SheetNames[0]
 const ws = wb.Sheets[sheetName]
+      console.log('Onglet utilisé:', sheetName, '— Tous les onglets:', wb.SheetNames)
       const json = XLSX.utils.sheet_to_json(ws, { 
   defval: '',
   range: 2  // saute les 2 premières lignes (titre + sous-titre), utilise la ligne 3 comme en-têtes
