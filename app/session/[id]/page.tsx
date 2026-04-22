@@ -6,13 +6,16 @@ import { getSessions, getSessionPoses, getSessionExercises, getRun, markSessionD
 import type { SportSession, SportYogaPose, SportRun } from '@/types'
 
 // ── Sound helpers ──────────────────────────────────────────
-function beep(freq = 880, duration = 120, volume = 0.3) {
+function beep(freq = 880, duration = 120, volume = 0.8) {
   try {
     const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+    // Reprendre le contexte si suspendu (nécessaire sur iOS)
+    if (ctx.state === 'suspended') ctx.resume()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.connect(gain)
     gain.connect(ctx.destination)
+    osc.type = 'square' // plus perçant qu'une sinusoïde
     osc.frequency.value = freq
     gain.gain.setValueAtTime(volume, ctx.currentTime)
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000)
@@ -504,7 +507,7 @@ const toggleVoice = () => {
       </div>
 
       {/* Contrôles */}
-      <div style={{ paddingBottom: 'max(32px, env(safe-area-inset-bottom))', display: 'flex', gap: 12 }}>
+      <div style={{ paddingBottom: 'calc(var(--nav-h) + var(--safe-bottom) + 16px)', display: 'flex', gap: 12 }}>
         <button
           onClick={handlePause}
           style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15 }}
