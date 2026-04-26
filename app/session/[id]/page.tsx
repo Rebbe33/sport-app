@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ChevronRight, X, SkipForward, Pause, Play, CheckCircle, Volume2, VolumeX } from 'lucide-react'
+import { ChevronRight, X, SkipForward, Pause, Play, CheckCircle, Volume2, VolumeX, Info } from 'lucide-react'
 import { getSessions, getSessionPoses, getSessionExercises, getRun, markSessionDone } from '@/lib/db'
 import type { SportSession, SportYogaPose, SportRun } from '@/types'
 
@@ -41,6 +41,32 @@ function alertDone() {
   vibrate([100, 50, 100, 50, 200])
 }
 
+async function fetchExerciseInfo(name: string): Promise<{ extract: string; image?: string } | null> {
+  try {
+    // Cherche d'abord en français
+    const searchUrl = `https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`
+    const res = await fetch(searchUrl)
+    if (res.ok) {
+      const data = await res.json()
+      return {
+        extract: data.extract || '',
+        image: data.thumbnail?.source,
+      }
+    }
+    // Fallback anglais
+    const enUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`
+    const enRes = await fetch(enUrl)
+    if (enRes.ok) {
+      const enData = await enRes.json()
+      return {
+        extract: enData.extract || '',
+        image: enData.thumbnail?.source,
+      }
+    }
+    return null
+  } catch { return null }
+}
+
 function speak(text: string, voiceEnabled: boolean) {
   if (!voiceEnabled) return
   try {
@@ -56,6 +82,7 @@ function speak(text: string, voiceEnabled: boolean) {
     window.speechSynthesis.speak(utt)
   } catch {}
 }
+
 
 function buildStepSpeech(step: Step): string {
   if (step.isRest) return `Repos. ${step.duration ? `${step.duration} secondes.` : ''} Récupère.`
@@ -221,6 +248,8 @@ const [paused, setPaused] = useState(false)
 const [finished, setFinished] = useState(false)
 const [started, setStarted] = useState(false)
 const [voiceEnabled, setVoiceEnabled] = useState(true)
+  const [guideInfo, setGuideInfo] = useState<{ label: string; extract: string; image?: string } | null>(null)
+const [guideLoading, setGuideLoading] = useState(false)
 
 const stepsRef = useRef<Step[]>([])
 const stepIdxRef = useRef(0)
@@ -336,6 +365,18 @@ const toggleVoice = () => {
   voiceRef.current = next
   setVoiceEnabled(next)
   if (!next) try { window.speechSynthesis.cancel() } catch {}
+}
+
+  const handleShowGuide = async (label: string) => {
+  setGuideInfo({ label, extract: '', image: undefined })
+  setGuideLoading(true)
+  const info = await fetchExerciseInfo(label)
+  setGuideInfo({
+    label,
+    extract: info?.extract || 'Aucune description trouvée. Recherche "' + label + '" sur YouTube pour voir la technique.',
+    image: info?.image,
+  })
+  setGuideLoading(false)
 }
 
   
@@ -484,15 +525,24 @@ const toggleVoice = () => {
         </CircleTimer>
 
         {/* Step info */}
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontSize: 26, fontWeight: 800, color: currentStep.isRest ? 'var(--text-2)' : 'var(--text)' }}>
-            {currentStep.label}
-          </h2>
-          {currentStep.sublabel && (
-            <p style={{ fontSize: 15, color: 'var(--text-2)', marginTop: 6 }}>{currentStep.sublabel}</p>
-          )}
-        </div>
-
+       <div style={{ textAlign: 'center' }}>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+    <h2 style={{ fontSize: 26, fontWeight: 800, color: currentStep.isRest ? 'var(--text-2)' : 'var(--text)' }}>
+      {currentStep.label}
+    </h2>
+    {session.type === 'muscu' && !currentStep.isRest && (
+      <button
+        onClick={() => handleShowGuide(currentStep.label)}
+        style={{ width: 28, height: 28, borderRadius: '50%', background: color + '22', border: `1px solid ${color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0 }}
+      >
+        <Info size={14} />
+      </button>
+    )}
+  </div>
+  {currentStep.sublabel && (
+    <p style={{ fontSize: 15, color: 'var(--text-2)', marginTop: 6 }}>{currentStep.sublabel}</p>
+  )}
+</div>
         {/* Prochaine étape */}
         {stepIdx + 1 < steps.length && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12 }}>
@@ -525,4 +575,31 @@ const toggleVoice = () => {
       </div>
     </div>
   )
+  {guideInfo && (
+  <div
+    onClick={() => setGuideInfo(null)}
+    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'flex-end', padding: '0' }}
+  >
+    <div
+      onClick={e => e.stopPropagation()}
+      style={{ width: '100%', background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', maxHeight: '75vh', overflowY: 'auto' }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h3 style={{ fontSize: 20, fontWeight: 800, color }}>{guideInfo.label}</h3>
+        <button onClick={() => setGuideInfo(null)} style={{ color: 'var(--text-3)' }}><X size={20} /></button>
+      </div>
+      {guideLoading ? (
+        <p style={{ color: 'var(--text-3)', textAlign: 'center', padding: '20px 0' }}>Chargement…</p>
+      ) : (
+        <>
+          {guideInfo.image && (
+            <img src={guideInfo.image} alt={guideInfo.label}
+              style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 12, marginBottom: 14 }} />
+          )}
+          <p style={{ fontSize: 15, color: 'var(--text-2)', lineHeight: 1.7 }}>{guideInfo.extract}</p>
+        </>
+      )}
+    </div>
+  </div>
+)}
 }
