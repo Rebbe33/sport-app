@@ -190,6 +190,10 @@ export default function BilanPage() {
   const period = periods[periodIdx]
 
   useEffect(() => {
+  localStorage.setItem('lastBilanDate', new Date().toISOString())
+}, [])
+  
+  useEffect(() => {
     setLoading(true)
     buildBilan(period.start, period.end)
       .then(b => {
