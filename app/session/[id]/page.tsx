@@ -590,10 +590,10 @@ const toggleVoice = () => {
       </div>
       {guideLoading ? (
         <p style={{ color: 'var(--text-3)', textAlign: 'center', padding: '20px 0' }}>Chargement…</p>
-      ) : (
+      ) : guideInfo ? (
         <>
           {guideInfo.image && (
-            <img src={guideInfo.image} alt={guideInfo?.label}
+            <img src={guideInfo.image} alt={guideInfo.label}
               style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 12, marginBottom: 14 }} />
           )}
           <p style={{ fontSize: 15, color: 'var(--text-2)', lineHeight: 1.7 }}>{guideInfo.extract}</p>
