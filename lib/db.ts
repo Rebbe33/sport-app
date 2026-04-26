@@ -179,3 +179,11 @@ export async function getRecentStats() {
 
   return { sessions, byType, totalMin, totalSessions: sessions.length }
 }
+
+export async function saveSessionFeedback(id: string, feedback: import('@/types').SessionFeedback): Promise<void> {
+  const { error } = await supabase
+    .from('sport_sessions')
+    .update({ feedback, ressenti: feedback.ressenti })
+    .eq('id', id)
+  if (error) throw error
+}
