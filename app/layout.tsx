@@ -2,17 +2,17 @@
 import './globals.css'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, Plus, Clock, TrendingUp } from 'lucide-react'
+import { CalendarDays, Plus, Clock, TrendingUp, FileText } from 'lucide-react'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const path = usePathname()
 
   const navItems = [
-    { href: '/', icon: CalendarDays, label: 'Semaine' },
-    { href: '/seance', icon: Plus, label: 'Séance' },
-    { href: '/historique', icon: Clock, label: 'Journal' },
-    { href: '/progres', icon: TrendingUp, label: 'Progrès' },
-  ]
+  { href: '/', icon: CalendarDays, label: 'Semaine' },
+  { href: '/seance', icon: Plus, label: 'Séance' },
+  { href: '/historique', icon: Clock, label: 'Journal' },
+  { href: '/bilan', icon: FileText, label: 'Bilan' },
+]
 
   return (
     <html lang="fr">
