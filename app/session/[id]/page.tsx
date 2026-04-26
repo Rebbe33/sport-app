@@ -585,7 +585,7 @@ const toggleVoice = () => {
       style={{ width: '100%', background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', maxHeight: '75vh', overflowY: 'auto' }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h3 style={{ fontSize: 20, fontWeight: 800, color }}>{guideInfo.label}</h3>
+        <h3 style={{ fontSize: 20, fontWeight: 800, color }}>{guideInfo?.label}</h3>
         <button onClick={() => setGuideInfo(null)} style={{ color: 'var(--text-3)' }}><X size={20} /></button>
       </div>
       {guideLoading ? (
