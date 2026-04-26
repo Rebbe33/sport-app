@@ -35,6 +35,13 @@ export default function HomePage() {
 
   const todaySession = sessions.find(s => isSameDay(new Date(s.date), new Date()))
   const isDone = todaySession?.status === 'done'
+  // Rappel bilan toutes les 2 semaines
+const showBilanReminder = (() => {
+  const lastBilan = localStorage.getItem('lastBilanDate')
+  if (!lastBilan) return true
+  const diff = (Date.now() - new Date(lastBilan).getTime()) / (1000 * 60 * 60 * 24)
+  return diff >= 14
+})()
 
   return (
     <div className="page">
@@ -45,6 +52,32 @@ export default function HomePage() {
         </p>
         <h1 style={{ fontSize: 30, fontWeight: 800, marginTop: 4 }}>Aujourd'hui</h1>
       </div>
+      {showBilanReminder && (
+  <Link href="/bilan">
+    <div style={{
+      margin: '0 20px',
+      background: 'var(--accent-light)',
+      border: '1px solid var(--accent)',
+      borderRadius: 14,
+      padding: '12px 16px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginTop: 12,
+    }}>
+      <span style={{ fontSize: 24 }}>📊</span>
+      <div style={{ flex: 1 }}>
+        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+          Bilan des 2 dernières semaines
+        </p>
+        <p style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>
+          C'est le moment de faire le point !
+        </p>
+      </div>
+      <span style={{ fontSize: 18 }}>→</span>
+    </div>
+  </Link>
+)}
 
       <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
