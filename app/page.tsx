@@ -36,12 +36,17 @@ export default function HomePage() {
   const todaySession = sessions.find(s => isSameDay(new Date(s.date), new Date()))
   const isDone = todaySession?.status === 'done'
   // Rappel bilan toutes les 2 semaines
-const showBilanReminder = (() => {
+const [showBilanReminder, setShowBilanReminder] = useState(false)
+
+useEffect(() => {
   const lastBilan = localStorage.getItem('lastBilanDate')
-  if (!lastBilan) return true
-  const diff = (Date.now() - new Date(lastBilan).getTime()) / (1000 * 60 * 60 * 24)
-  return diff >= 14
-})()
+  if (!lastBilan) {
+    setShowBilanReminder(true)
+  } else {
+    const diff = (Date.now() - new Date(lastBilan).getTime()) / (1000 * 60 * 60 * 24)
+    if (diff >= 14) setShowBilanReminder(true)
+  }
+}, [])
 
   return (
     <div className="page">
