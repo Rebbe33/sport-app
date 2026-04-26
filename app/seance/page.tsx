@@ -223,7 +223,7 @@ export default function SeancePage() {
         type,
         date,
         duration_minutes: Number(duration),
-        ressenti,
+        ressenti: 3,
         status: 'planned',
         notes: (detailData.notes as string) || undefined,
       })
@@ -354,27 +354,7 @@ export default function SeancePage() {
               <label className="field-label">Durée (minutes)</label>
               <input type="number" className="input-field" placeholder="45" min={1} value={duration} onChange={e => setDuration(e.target.value)} />
             </div>
-            <div>
-              <label className="field-label">Ressenti général</label>
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between' }}>
-                {RESSENTI_OPTIONS.map(({ val, emoji, label }) => (
-                  <button
-                    key={val}
-                    onClick={() => setRessenti(val)}
-                    style={{
-                      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                      padding: '10px 4px', borderRadius: 12,
-                      background: ressenti === val ? (activeMeta?.color + '22' || 'var(--surface2)') : 'var(--surface)',
-                      border: `1px solid ${ressenti === val ? (activeMeta?.color || 'var(--border-strong)') : 'var(--border)'}`,
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    <span style={{ fontSize: 22 }}>{emoji}</span>
-                    <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--font-display)', fontWeight: 600 }}>{label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            
             <button className="btn-primary" onClick={handleMeta} disabled={!duration}>
               Continuer →
             </button>
