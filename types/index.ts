@@ -55,3 +55,22 @@ export interface WeekDay {
   isToday: boolean
   isPast: boolean
 }
+
+export interface SessionFeedback {
+  ressenti: Ressenti
+  courbatures: string[]
+  bien: string
+  difficile: string
+}
+
+export interface SportSession {
+  id: string
+  type: DisciplineType
+  date: string
+  duration_minutes: number
+  ressenti: Ressenti
+  notes?: string
+  status: 'planned' | 'done'
+  feedback?: SessionFeedback
+  created_at: string
+}
