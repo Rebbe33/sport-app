@@ -2,8 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ChevronRight, X, SkipForward, Pause, Play, CheckCircle, Volume2, VolumeX, Info } from 'lucide-react'
-import { getSessions, getSessionPoses, getSessionExercises, getRun, markSessionDone } from '@/lib/db'
-import type { SportSession, SportYogaPose, SportRun } from '@/types'
+import { getSessions, getSessionPoses, getSessionExercises, getRun, markSessionDone, saveSessionFeedback } from '@/lib/db'
+import type { SportSession, SportYogaPose, SportRun, SessionFeedback, Ressenti } from '@/types'
 
 // ── Sound ──────────────────────────────────────────────────
 function beep(freq = 880, duration = 120, volume = 0.8) {
@@ -200,6 +200,12 @@ export default function SessionPage() {
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const [guideInfo, setGuideInfo] = useState<{ label: string; extract: string; image?: string } | null>(null)
   const [guideLoading, setGuideLoading] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
+const [fbRessenti, setFbRessenti] = useState<Ressenti>(3)
+const [fbCourbatures, setFbCourbatures] = useState<string[]>([])
+const [fbBien, setFbBien] = useState('')
+const [fbDifficile, setFbDifficile] = useState('')
+const [feedbackDone, setFeedbackDone] = useState(false)
 
   const stepsRef = useRef<Step[]>([])
   const stepIdxRef = useRef(0)
@@ -266,9 +272,9 @@ export default function SessionPage() {
     const allSteps = stepsRef.current
     if (nextIdx >= allSteps.length) {
       finishedRef.current = true
-      setFinished(true)
       alertDone()
-      speak('Bravo ! Séance terminée !', voiceRef.current)
+speak('Bravo ! Séance terminée ! Remplis ton compte-rendu.', voiceRef.current)
+setShowFeedback(true)
       if (tickRef.current) clearInterval(tickRef.current)
       return
     }
@@ -389,23 +395,142 @@ export default function SessionPage() {
       </div>
     )
   }
+  
+  // ── Compte-rendu ──────────────────────────────────────────
+if (showFeedback && !feedbackDone) {
+  const COURBATURES_OPTIONS = ['Dos', 'Épaules', 'Bras', 'Abdos', 'Fessiers', 'Cuisses', 'Mollets', 'Aucune']
+  const RESSENTI_OPTIONS: { val: Ressenti; emoji: string; label: string }[] = [
+    { val: 1, emoji: '😩', label: 'Épuisée' },
+    { val: 2, emoji: '😕', label: 'Difficile' },
+    { val: 3, emoji: '😐', label: 'Correct' },
+    { val: 4, emoji: '😊', label: 'Bien' },
+    { val: 5, emoji: '🔥', label: 'Super !' },
+  ]
 
-  // ── Écran de fin ──────────────────────────────────────────
-  if (finished) {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'var(--bg)' }}>
-        <div style={{ fontSize: 72, marginBottom: 20 }}>🏆</div>
-        <h1 style={{ fontSize: 30, fontWeight: 800, textAlign: 'center' }}>Séance terminée !</h1>
-        <p style={{ color: 'var(--text-2)', marginTop: 8, marginBottom: 32, textAlign: 'center' }}>
-          {formatTime(totalElapsed)} au total · Bravo ! 💪
-        </p>
-        <button className="btn-primary" style={{ background: color, maxWidth: 340, width: '100%' }} onClick={handleFinish}>
-          <CheckCircle size={16} style={{ display: 'inline', marginRight: 6 }} />
-          Valider et retourner au planning
-        </button>
-      </div>
-    )
+  const handleSaveFeedback = async () => {
+    if (!session) return
+    const feedback: SessionFeedback = {
+      ressenti: fbRessenti,
+      courbatures: fbCourbatures,
+      bien: fbBien,
+      difficile: fbDifficile,
+    }
+    await saveSessionFeedback(session.id, feedback)
+    setFeedbackDone(true)
+    setFinished(true)
   }
+
+  return (
+    <div style={{ minHeight: '100dvh', background: 'var(--bg)', overflowY: 'auto' }}>
+      <div style={{ padding: '56px 20px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 48 }}>🏆</p>
+          <h1 style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>Séance terminée !</h1>
+          <p style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 6 }}>
+            {formatTime(totalElapsed)} · Dis-moi comment ça s'est passé
+          </p>
+        </div>
+
+        {/* Ressenti */}
+        <div>
+          <label className="field-label">Comment tu te sens ?</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {RESSENTI_OPTIONS.map(({ val, emoji, label }) => (
+              <button key={val} onClick={() => setFbRessenti(val)} style={{
+                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                padding: '10px 4px', borderRadius: 12,
+                background: fbRessenti === val ? color + '22' : 'var(--surface)',
+                border: `1px solid ${fbRessenti === val ? color : 'var(--border)'}`,
+                transition: 'all 0.15s', cursor: 'pointer',
+              }}>
+                <span style={{ fontSize: 22 }}>{emoji}</span>
+                <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--font-display)', fontWeight: 600 }}>{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Courbatures */}
+        <div>
+          <label className="field-label">Courbatures / zones travaillées</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {COURBATURES_OPTIONS.map(zone => {
+              const selected = fbCourbatures.includes(zone)
+              return (
+                <button key={zone} onClick={() => setFbCourbatures(prev =>
+                  selected ? prev.filter(z => z !== zone) : [...prev, zone]
+                )} style={{
+                  padding: '8px 14px', borderRadius: 99, border: '1px solid',
+                  fontSize: 13, fontFamily: 'var(--font-display)', fontWeight: 600,
+                  background: selected ? color + '22' : 'var(--surface)',
+                  color: selected ? color : 'var(--text-2)',
+                  borderColor: selected ? color : 'var(--border)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}>
+                  {zone}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Ce qui s'est bien passé */}
+        <div>
+          <label className="field-label">Ce qui s'est bien passé</label>
+          <textarea
+            className="input-field"
+            rows={2}
+            placeholder="Ex: J'ai tenu toutes mes séries, bonne allure..."
+            value={fbBien}
+            onChange={e => setFbBien(e.target.value)}
+            style={{ resize: 'none' }}
+          />
+        </div>
+
+        {/* Ce qui était difficile */}
+        <div>
+          <label className="field-label">Ce qui était difficile</label>
+          <textarea
+            className="input-field"
+            rows={2}
+            placeholder="Ex: Le dernier tour, manque de souffle..."
+            value={fbDifficile}
+            onChange={e => setFbDifficile(e.target.value)}
+            style={{ resize: 'none' }}
+          />
+        </div>
+
+        <button className="btn-primary" style={{ background: color }} onClick={handleSaveFeedback}>
+          <CheckCircle size={16} style={{ display: 'inline', marginRight: 6 }} />
+          Enregistrer et terminer
+        </button>
+
+        <button onClick={() => { setFeedbackDone(true); setFinished(true); handleFinish() }}
+          style={{ fontSize: 13, color: 'var(--text-3)', textAlign: 'center', padding: '4px 0', cursor: 'pointer', background: 'none', border: 'none' }}>
+          Passer le compte-rendu
+        </button>
+
+      </div>
+    </div>
+  )
+}
+
+// ── Écran de fin ──────────────────────────────────────────
+if (finished) {
+  return (
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'var(--bg)' }}>
+      <div style={{ fontSize: 72, marginBottom: 20 }}>✅</div>
+      <h1 style={{ fontSize: 30, fontWeight: 800, textAlign: 'center' }}>C'est enregistré !</h1>
+      <p style={{ color: 'var(--text-2)', marginTop: 8, marginBottom: 32, textAlign: 'center' }}>
+        Bravo pour cette séance 💪
+      </p>
+      <button className="btn-primary" style={{ background: color, maxWidth: 340, width: '100%' }} onClick={handleFinish}>
+        Retourner au planning
+      </button>
+    </div>
+  )
+}
 
   // ── Écran séance ──────────────────────────────────────────
   return (
