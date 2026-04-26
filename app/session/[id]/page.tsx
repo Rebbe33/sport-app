@@ -575,31 +575,34 @@ const toggleVoice = () => {
       </div>
     </div>
   )
-  {guideInfo && (
-  <div
-    onClick={() => setGuideInfo(null)}
-    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'flex-end', padding: '0' }}
-  >
+  {guideInfo && (() => {
+  const g = guideInfo
+  return (
     <div
-      onClick={e => e.stopPropagation()}
-      style={{ width: '100%', background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', maxHeight: '75vh', overflowY: 'auto' }}
+      onClick={() => setGuideInfo(null)}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h3 style={{ fontSize: 20, fontWeight: 800, color }}>{guideInfo?.label}</h3>
-        <button onClick={() => setGuideInfo(null)} style={{ color: 'var(--text-3)' }}><X size={20} /></button>
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ width: '100%', background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', maxHeight: '75vh', overflowY: 'auto' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ fontSize: 20, fontWeight: 800, color }}>{g.label}</h3>
+          <button onClick={() => setGuideInfo(null)} style={{ color: 'var(--text-3)' }}><X size={20} /></button>
+        </div>
+        {guideLoading ? (
+          <p style={{ color: 'var(--text-3)', textAlign: 'center', padding: '20px 0' }}>Chargement…</p>
+        ) : (
+          <>
+            {g.image && (
+              <img src={g.image} alt={g.label}
+                style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 12, marginBottom: 14 }} />
+            )}
+            <p style={{ fontSize: 15, color: 'var(--text-2)', lineHeight: 1.7 }}>{g.extract}</p>
+          </>
+        )}
       </div>
-      {guideLoading ? (
-        <p style={{ color: 'var(--text-3)', textAlign: 'center', padding: '20px 0' }}>Chargement…</p>
-     ) : (
-  <>
-    {guideInfo && guideInfo.image && (
-      <img src={guideInfo.image} alt={guideInfo.label}
-        style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 12, marginBottom: 14 }} />
-    )}
-    <p style={{ fontSize: 15, color: 'var(--text-2)', lineHeight: 1.7 }}>{guideInfo && guideInfo.extract}</p>
-  </>
-)}
     </div>
-  </div>
-)}
+  )
+})()}
 }
