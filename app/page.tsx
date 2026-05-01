@@ -161,19 +161,29 @@ useEffect(() => {
                   <p style={{ fontSize: 10, fontFamily: 'var(--font-display)', fontWeight: 700, textTransform: 'uppercase', color: today ? 'var(--accent)' : 'var(--text-3)' }}>
                     {format(day, 'EEE', { locale: fr }).slice(0, 2)}
                   </p>
-                  <div style={{
-                    width: 34, height: 34, borderRadius: 10,
-                    background: s ? (s.status === 'done' ? meta!.color : meta!.color + '30') : 'var(--surface2)',
-                    border: today ? '2px solid var(--accent)' : '1px solid transparent',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    {s?.status === 'done'
-                      ? <Check size={14} color="white" />
-                      : Icon
-                        ? <span style={{ color: meta!.color, display: 'flex' }}><Icon size={14} /></span>
-                        : null
-                    }
-                  </div>
+                  {s && s.status === 'planned' ? (
+  <Link href={`/session/${s.id}`}>
+    <div style={{
+      width: 34, height: 34, borderRadius: 10,
+      background: meta!.color + '30',
+      border: today ? '2px solid var(--accent)' : '1px solid transparent',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <span style={{ color: meta!.color, display: 'flex' }}>
+        {Icon && <Icon size={14} />}
+      </span>
+    </div>
+  </Link>
+) : (
+  <div style={{
+    width: 34, height: 34, borderRadius: 10,
+    background: s ? meta!.color : 'var(--surface2)',
+    border: today ? '2px solid var(--accent)' : '1px solid transparent',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }}>
+    {s?.status === 'done' && <Check size={14} color="white" />}
+  </div>
+)}
                 </div>
               )
             })}
