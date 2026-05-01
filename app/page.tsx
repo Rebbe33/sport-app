@@ -33,8 +33,9 @@ export default function HomePage() {
     ).then(setSessions).finally(() => setLoading(false))
   }, []) // eslint-disable-line
 
-  const todaySession = sessions.find(s => isSameDay(new Date(s.date), new Date()))
-  const isDone = todaySession?.status === 'done'
+  const todaySessions = sessions.filter(s => isSameDay(new Date(s.date), new Date()))
+const todaySession = todaySessions[0] // pour la compatibilité
+const isDone = todaySessions.length > 0 && todaySessions.every(s => s.status === 'done')
   // Rappel bilan toutes les 2 semaines
 const [showBilanReminder, setShowBilanReminder] = useState(false)
 
@@ -87,56 +88,60 @@ useEffect(() => {
       <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* Carte séance du jour */}
-        {!loading && (todaySession ? (() => {
-          const meta = META[todaySession.type]
-          const Icon = ICON[todaySession.type]
-          return (
-            <div style={{ background: meta.color + '12', border: `1.5px solid ${meta.color}40`, borderRadius: 20, padding: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 16, background: meta.color + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>
-                  {meta.emoji}
-                </div>
-                <div>
-                  <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20 }}>{meta.label}</p>
-                  <p style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 2 }}>
-                    {todaySession.duration_minutes} min
-                    {isDone ? ' · ✅ Faite !' : ' · Planifiée'}
-                  </p>
-                </div>
-              </div>
-
-              {todaySession.notes && (
-                <p style={{ fontSize: 14, color: 'var(--text-2)', background: 'var(--surface)', borderRadius: 12, padding: '10px 14px', marginBottom: 14 }}>
-                  {todaySession.notes}
-                </p>
-              )}
-
-              <div style={{ display: 'flex', gap: 10 }}>
-                {!isDone ? (
-                  <Link href={`/session/${todaySession.id}`} style={{ flex: 2 }}>
-                    <button style={{
-                      width: '100%', padding: '14px 20px',
-                      background: meta.color, border: 'none', borderRadius: 14,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      color: 'white', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15,
-                      cursor: 'pointer',
-                    }}>
-                      <Play size={17} fill="white" /> Lancer la séance
-                    </button>
-                  </Link>
-                ) : (
-                  <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '14px', background: 'var(--surface)', borderRadius: 14 }}>
-                    <Check size={16} color={meta.color} />
-                    <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, color: meta.color }}>Séance accomplie</p>
-                  </div>
-                )}
-                <Link href={`/historique/${todaySession.id}`} style={{ flex: 1 }}>
-                  <button className="btn-secondary" style={{ height: '100%' }}>Détails</button>
-                </Link>
-              </div>
+        {!loading && (todaySessions.length > 0 ? (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    {todaySessions.map(s => {
+      const meta = META[s.type]
+      const done = s.status === 'done'
+      return (
+        <div key={s.id} style={{ background: meta.color + '12', border: `1.5px solid ${meta.color}40`, borderRadius: 20, padding: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: meta.color + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>
+              {meta.emoji}
             </div>
-          )
-        })() : (
+            <div>
+              <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20 }}>{meta.label}</p>
+              <p style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 2 }}>
+                {s.duration_minutes} min
+                {done ? ' · ✅ Faite !' : ' · Planifiée'}
+              </p>
+            </div>
+          </div>
+
+          {s.notes && (
+            <p style={{ fontSize: 14, color: 'var(--text-2)', background: 'var(--surface)', borderRadius: 12, padding: '10px 14px', marginBottom: 14 }}>
+              {s.notes}
+            </p>
+          )}
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            {!done ? (
+              <Link href={`/session/${s.id}`} style={{ flex: 2 }}>
+                <button style={{
+                  width: '100%', padding: '14px 20px',
+                  background: meta.color, border: 'none', borderRadius: 14,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  color: 'white', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15,
+                  cursor: 'pointer',
+                }}>
+                  <Play size={17} fill="white" /> Lancer
+                </button>
+              </Link>
+            ) : (
+              <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '14px', background: 'var(--surface)', borderRadius: 14 }}>
+                <Check size={16} color={meta.color} />
+                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, color: meta.color }}>Accomplie</p>
+              </div>
+            )}
+            <Link href={`/historique/${s.id}`} style={{ flex: 1 }}>
+              <button className="btn-secondary" style={{ height: '100%' }}>Détails</button>
+            </Link>
+          </div>
+        </div>
+      )
+    })}
+  </div>
+) : (
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '28px 20px', textAlign: 'center' }}>
             <p style={{ fontSize: 36, marginBottom: 10 }}>🛋️</p>
             <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 17 }}>Jour de repos</p>
@@ -152,26 +157,34 @@ useEffect(() => {
           <p className="section-title">Cette semaine</p>
           <div style={{ display: 'flex', gap: 6 }}>
             {weekDays.map(day => {
-              const s = sessions.find(x => isSameDay(new Date(x.date), day))
-              const today = isToday(day)
-              const meta = s ? META[s.type] : null
-              const Icon = s ? ICON[s.type] : null
+              const daySessions = sessions.filter(x => isSameDay(new Date(x.date), day))
+const s = daySessions[0]
+const meta = s ? META[s.type] : null
+const Icon = s ? ICON[s.type] : null
+const allDone = daySessions.length > 0 && daySessions.every(x => x.status === 'done')
+const hasMultiple = daySessions.length > 1
               return (
                 <div key={day.toISOString()} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
                   <p style={{ fontSize: 10, fontFamily: 'var(--font-display)', fontWeight: 700, textTransform: 'uppercase', color: today ? 'var(--accent)' : 'var(--text-3)' }}>
                     {format(day, 'EEE', { locale: fr }).slice(0, 2)}
                   </p>
-                  {s && s.status === 'planned' ? (
+                  {s && s.status !== 'done' ? (
   <Link href={`/session/${s.id}`}>
     <div style={{
       width: 34, height: 34, borderRadius: 10,
       background: meta!.color + '30',
       border: today ? '2px solid var(--accent)' : '1px solid transparent',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'relative',
     }}>
       <span style={{ color: meta!.color, display: 'flex' }}>
         {Icon && <Icon size={14} />}
       </span>
+      {hasMultiple && (
+        <div style={{ position: 'absolute', top: -4, right: -4, width: 14, height: 14, borderRadius: '50%', background: meta!.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 8, color: 'white', fontWeight: 700 }}>{daySessions.length}</span>
+        </div>
+      )}
     </div>
   </Link>
 ) : (
@@ -180,8 +193,14 @@ useEffect(() => {
     background: s ? meta!.color : 'var(--surface2)',
     border: today ? '2px solid var(--accent)' : '1px solid transparent',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
+    position: 'relative',
   }}>
-    {s?.status === 'done' && <Check size={14} color="white" />}
+    {allDone && <Check size={14} color="white" />}
+    {hasMultiple && allDone && (
+      <div style={{ position: 'absolute', top: -4, right: -4, width: 14, height: 14, borderRadius: '50%', background: 'white', border: `1px solid ${meta!.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 8, color: meta!.color, fontWeight: 700 }}>{daySessions.length}</span>
+      </div>
+    )}
   </div>
 )}
                 </div>
