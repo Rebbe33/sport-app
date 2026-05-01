@@ -163,6 +163,7 @@ const meta = s ? META[s.type] : null
 const Icon = s ? ICON[s.type] : null
 const allDone = daySessions.length > 0 && daySessions.every(x => x.status === 'done')
 const hasMultiple = daySessions.length > 1
+      const today = isToday(day)
               return (
                 <div key={day.toISOString()} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
                   <p style={{ fontSize: 10, fontFamily: 'var(--font-display)', fontWeight: 700, textTransform: 'uppercase', color: today ? 'var(--accent)' : 'var(--text-3)' }}>
