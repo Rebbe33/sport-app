@@ -4,6 +4,8 @@ import { useRouter, useParams } from 'next/navigation'
 import { ChevronRight, X, SkipForward, Pause, Play, CheckCircle, Volume2, VolumeX, Info } from 'lucide-react'
 import { getSessions, getSessionPoses, getSessionExercises, getRun, markSessionDone, saveSessionFeedback } from '@/lib/db'
 import type { SportSession, SportYogaPose, SportRun, SessionFeedback, Ressenti } from '@/types'
+import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 
 // ── Sound ──────────────────────────────────────────────────
 function beep(freq = 880, duration = 120, volume = 0.8) {
@@ -369,8 +371,13 @@ setShowFeedback(true)
           {session.type === 'yoga' ? 'Yoga' : session.type === 'muscu' ? 'Muscu / HIIT' : 'Course à pied'}
         </h1>
         <p style={{ color: 'var(--text-2)', marginBottom: 8, textAlign: 'center' }}>
-          {steps.length} étapes · ~{session.duration_minutes} min
-        </p>
+  {steps.length} étapes · ~{session.duration_minutes} min
+</p>
+{session.date !== format(new Date(), 'yyyy-MM-dd') && (
+  <p style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600, marginBottom: 4, textAlign: 'center' }}>
+    📅 Rattrapage du {format(new Date(session.date), 'd MMM', { locale: fr })}
+  </p>
+)}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '20px 0 24px', width: '100%', maxWidth: 340 }}>
           {steps.slice(0, 5).map((s, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: s.isRest ? 'var(--surface2)' : 'var(--surface)', borderRadius: 10, border: '1px solid var(--border)' }}>
