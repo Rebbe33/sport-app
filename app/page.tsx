@@ -171,6 +171,8 @@ const hasMultiple = daySessions.length > 1
                   </p>
                   {s && s.status !== 'done' ? (
   <Link href={`/session/${s.id}`}>
+    {daySessions.length > 0 && !allDone ? (
+  <Link href={hasMultiple ? `/planning/${format(day, 'yyyy-MM-dd')}` : `/session/${s!.id}`}>
     <div style={{
       width: 34, height: 34, borderRadius: 10,
       background: meta!.color + '30',
