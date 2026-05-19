@@ -23,16 +23,18 @@ export default function HomePage() {
   const [sessions, setSessions] = useState<SportSession[]>([])
   const [loading, setLoading] = useState(true)
   const [showBilanReminder, setShowBilanReminder] = useState(false)
+const [weekOffset, setWeekOffset] = useState(0)
+const weekStart = startOfWeek(addDays(new Date(), weekOffset * 7), { weekStartsOn: 1 })
+const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+const isCurrentWeek = weekOffset === 0
 
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
-
-  useEffect(() => {
-    getSessionsByWeek(
-      format(weekStart, 'yyyy-MM-dd'),
-      format(addDays(weekStart, 6), 'yyyy-MM-dd')
-    ).then(setSessions).finally(() => setLoading(false))
-  }, []) // eslint-disable-line
+useEffect(() => {
+  setLoading(true)
+  getSessionsByWeek(
+    format(weekStart, 'yyyy-MM-dd'),
+    format(addDays(weekStart, 6), 'yyyy-MM-dd')
+  ).then(setSessions).finally(() => setLoading(false))
+}, [weekOffset]) // eslint-disable-line
 
   useEffect(() => {
     const lastBilan = localStorage.getItem('lastBilanDate')
@@ -50,12 +52,39 @@ export default function HomePage() {
   return (
     <div className="page">
       {/* Header */}
-      <div style={{ padding: '56px 20px 20px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-        <p style={{ fontSize: 12, fontFamily: 'var(--font-display)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
-          {format(new Date(), "EEEE d MMMM", { locale: fr })}
-        </p>
-        <h1 style={{ fontSize: 30, fontWeight: 800, marginTop: 4 }}>Aujourd'hui</h1>
-      </div>
+     <div style={{ padding: '56px 20px 20px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+  <p style={{ fontSize: 12, fontFamily: 'var(--font-display)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
+    {format(new Date(), "EEEE d MMMM", { locale: fr })}
+  </p>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+    <h1 style={{ fontSize: 30, fontWeight: 800 }}>
+      {isCurrentWeek ? "Aujourd'hui" : format(weekStart, "'Semaine du' d MMM", { locale: fr })}
+    </h1>
+    <div style={{ display: 'flex', gap: 4 }}>
+      <button
+        onClick={() => setWeekOffset(w => w - 1)}
+        style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--surface2)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-2)' }}
+      >
+        ←
+      </button>
+      {!isCurrentWeek && (
+        <button
+          onClick={() => setWeekOffset(0)}
+          style={{ height: 34, padding: '0 10px', borderRadius: 10, background: 'var(--accent-light)', border: '1px solid var(--accent)', fontSize: 11, fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--accent)', cursor: 'pointer' }}
+        >
+          Auj.
+        </button>
+      )}
+      <button
+        onClick={() => setWeekOffset(w => Math.min(w + 1, 0))}
+        disabled={isCurrentWeek}
+        style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--surface2)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isCurrentWeek ? 'default' : 'pointer', color: isCurrentWeek ? 'var(--text-3)' : 'var(--text-2)' }}
+      >
+        →
+      </button>
+    </div>
+  </div>
+</div>
 
       {/* Bandeau bilan */}
       {showBilanReminder && (
@@ -74,8 +103,8 @@ export default function HomePage() {
       <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* Séances du jour */}
-        {!loading && (
-          todaySessions.length > 0 ? (
+        {!loading && isCurrentWeek && (
+  todaySessions.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {todaySessions.map(s => {
                 const meta = META[s.type]
@@ -132,6 +161,17 @@ export default function HomePage() {
             </div>
           )
         )}
+
+        {!loading && !isCurrentWeek && (
+  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+    <span style={{ fontSize: 20 }}>📅</span>
+    <p style={{ fontSize: 14, color: 'var(--text-2)' }}>
+      {sessions.filter(s => s.status !== 'done').length > 0
+        ? `${sessions.filter(s => s.status !== 'done').length} séance(s) à rattraper cette semaine`
+        : 'Toutes les séances de cette semaine sont faites ✅'}
+    </p>
+  </div>
+)}
 
         {/* Mini planning semaine */}
         <div>
